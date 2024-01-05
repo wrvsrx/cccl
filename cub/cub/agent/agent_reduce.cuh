@@ -346,7 +346,15 @@ struct AgentReduce
     // Continue reading items (block-striped)
     while (thread_offset < valid_items)
     {
+#if _CCCL_STD_VER < 2020
       InputT item(d_wrapped_in[block_offset + thread_offset]);
+#else
+      // For c++20 and above,
+      // `InputT item(d_wrapped_in[block_offset + thread_offset])`
+      // will trigger aggregate initialization, which will make
+      // compilation fail.
+      InputT item(static_cast<InputT>(d_wrapped_in[block_offset + thread_offset]));
+#endif
 
       thread_aggregate = reduction_op(thread_aggregate, transform_op(item));
       thread_offset += BLOCK_THREADS;
